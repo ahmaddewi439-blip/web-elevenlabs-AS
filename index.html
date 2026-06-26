@@ -1,59 +1,43 @@
 <!DOCTYPE html>
-<html lang="id">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web TTS Ahmad</title>
-    <style>
-        body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
-        textarea { width: 100%; height: 100px; margin-bottom: 15px; padding: 10px; }
-        button { padding: 10px 20px; background-color: #007bff; color: white; border: none; cursor: pointer; }
-        button:hover { background-color: #0056b3; }
-        audio { width: 100%; margin-top: 20px; }
-    </style>
+    <title>ElevenLabs Voice Generator</title>
 </head>
-<body>
+<body style="font-family: Arial; padding: 30px">
 
-    <h2>Ubah Teks Menjadi Suara</h2>
-    <textarea id="textInput" placeholder="Ketik sesuatu di sini (contoh: Tas lucu tapi fungsional? Cek keranjang kuning sekarang!)"></textarea>
-    <br>
-    <button onclick="generateSpeech()" id="btnGenerate">Generate Suara</button>
-    
-    <div id="audioContainer"></div>
+<h2>Text to Speech</h2>
 
-    <script>
-        async function generateSpeech() {
-            const text = document.getElementById('textInput').value;
-            const btn = document.getElementById('btnGenerate');
-            const container = document.getElementById('audioContainer');
-            
-            if (!text) return alert("Silakan ketik teks terlebih dahulu!");
+<textarea id="text" rows="5" cols="40" placeholder="Tulis teks..."></textarea>
+<br><br>
 
-            btn.innerText = "Memproses...";
-            btn.disabled = true;
+<button onclick="generate()">Generate Audio</button>
 
-            try {
-                // Memanggil file index.py yang ada di folder api
-                const response = await fetch('/api/generate-audio', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text: text })
-                });
+<br><br>
+<audio id="audio" controls></audio>
 
-                if (response.ok) {
-                    const audioBlob = await response.blob();
-                    const audioUrl = URL.createObjectURL(audioBlob);
-                    container.innerHTML = `<audio controls src="${audioUrl}" autoplay></audio>`;
-                } else {
-                    alert("Gagal menghasilkan suara.");
-                }
-            } catch (error) {
-                alert("Terjadi kesalahan sistem.");
-            }
+<script>
+async function generate() {
+    const text = document.getElementById("text").value;
 
-            btn.innerText = "Generate Suara";
-            btn.disabled = false;
-        }
-    </script>
+    const res = await fetch("/api/generate-audio", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ text })
+    });
+
+    if (!res.ok) {
+        alert("Error generate audio");
+        return;
+    }
+
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+
+    document.getElementById("audio").src = url;
+}
+</script>
+
 </body>
 </html>
