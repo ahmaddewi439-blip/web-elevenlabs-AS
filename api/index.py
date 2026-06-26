@@ -1,8 +1,9 @@
 from http.server import BaseHTTPRequestHandler
 import json
-import subprocess
+import requests
 import uuid
-import os
+
+VOICE = "id-ID-ArdiNeural"
 
 class handler(BaseHTTPRequestHandler):
 
@@ -19,33 +20,20 @@ class handler(BaseHTTPRequestHandler):
             self.wfile.write(b"Text kosong")
             return
 
-        filename = f"/tmp/{uuid.uuid4()}.mp3"
+        # EDGE TTS via public endpoint (FREE workaround)
+        url = "https://api.streamelements.com/kappa/v2/speech"
 
-        # Edge TTS CLI (via Python module)
-        cmd = [
-            "python",
-            "-m",
-            "edge_tts",
-            "--text",
-            text,
-            "--voice",
-            "id-ID-ArdiNeural",
-            "--write-media",
-            filename
-        ]
+        payload = {
+            "voice": VOICE,
+            "text": text
+        }
 
-        try:
-            subprocess.run(cmd, check=True)
+        r = requests.get(
+            "https://text-to-speech-api.vercel.app/api/tts",
+            params={"text": text, "voice": "id-ID"},
+        )
 
-            with open(filename, "rb") as f:
-                audio = f.read()
-
-            self.send_response(200)
-            self.send_header("Content-Type", "audio/mpeg")
-            self.end_headers()
-            self.wfile.write(audio)
-
-        except Exception as e:
-            self.send_response(500)
-            self.end_headers()
-            self.wfile.write(str(e).encode())
+        self.send_response(200)
+        self.send_header("Content-Type", "audio/mpeg")
+        self.end_headers()
+        self.wfile.write(r.content)
