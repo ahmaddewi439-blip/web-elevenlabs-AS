@@ -1,18 +1,18 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response
 import requests
 
 app = Flask(__name__)
 
-VOICE_ID = "21m00Tcm4TlvDq8ikWAM"
+VOICE_ID = "21m00Tcm4TlvDq8ikWAM"  # Rachel
 ELEVANLABS_API_KEY = "sk_0a1305f6f3a9780dceb85f2441b0af1805b8ef00d7d5cad6"
 
 @app.route('/api/generate-audio', methods=['POST'])
 def generate_audio():
-    data = request.json
-    teks = data.get("text", "")
+    data = request.get_json()
+    text = data.get("text", "")
 
-    if not teks:
-        return jsonify({"error": "Teks tidak boleh kosong"}), 400
+    if not text:
+        return jsonify({"error": "Text kosong"}), 400
 
     url = f"https://api.elevenlabs.io/v1/text-to-speech/{VOICE_ID}"
 
@@ -23,7 +23,7 @@ def generate_audio():
     }
 
     payload = {
-        "text": teks,
+        "text": text,
         "model_id": "eleven_multilingual_v2",
         "voice_settings": {
             "stability": 0.5,
@@ -33,6 +33,10 @@ def generate_audio():
 
     response = requests.post(url, json=payload, headers=headers)
 
-    return response.content, 200, {
-        "Content-Type": "audio/mpeg"
-    }
+    if response.status_code != 200:
+        return jsonify({
+            "error": "ElevenLabs error",
+            "detail": response.text
+        }), 500
+
+    return Response(response.content, mimetype="audio/mpeg")
