@@ -1,24 +1,19 @@
+from flask import Flask, request, jsonify, Response
 import requests
-import json
+
+app = Flask(__name__)
 
 VOICE_ID = "21m00Tcm4TlvDq8ikWAM"
 API_KEY = "sk_0a1305f6f3a9780dceb85f2441b0af1805b8ef00d7d5cad6"
 
-def handler(request):
-    if request.method != "POST":
-        return {
-            "statusCode": 405,
-            "body": json.dumps({"error": "Method not allowed"})
-        }
+@app.route("/api/generate-audio", methods=["POST"])
+def generate_audio():
+    data = request.get_json()
 
-    body = request.json()
-    text = body.get("text", "")
+    if not data or "text" not in data:
+        return jsonify({"error": "Text kosong"}), 400
 
-    if not text:
-        return {
-            "statusCode": 400,
-            "body": json.dumps({"error": "Text kosong"})
-        }
+    text = data["text"]
 
     url = f"https://api.elevenlabs.io/v1/text-to-speech/{VOICE_ID}"
 
@@ -30,15 +25,23 @@ def handler(request):
 
     payload = {
         "text": text,
-        "model_id": "eleven_multilingual_v2"
+        "model_id": "eleven_multilingual_v2",
+        "voice_settings": {
+            "stability": 0.5,
+            "similarity_boost": 0.75
+        }
     }
 
     r = requests.post(url, json=payload, headers=headers)
 
-    return {
-        "statusCode": 200,
-        "headers": {
-            "Content-Type": "audio/mpeg"
-        },
-        "body": r.content
-    }
+    if r.status_code != 200:
+        return jsonify({
+            "error": "ElevenLabs error",
+            "detail": r.text
+        }), 500
+
+    return Response(r.content, mimetype="audio/mpeg")
+
+
+# 🔥 INI YANG WAJIB UNTUK VERCEL
+app = app
