@@ -1,9 +1,6 @@
 from http.server import BaseHTTPRequestHandler
 import json
 import requests
-import uuid
-
-VOICE = "id-ID-ArdiNeural"
 
 class handler(BaseHTTPRequestHandler):
 
@@ -20,18 +17,27 @@ class handler(BaseHTTPRequestHandler):
             self.wfile.write(b"Text kosong")
             return
 
-        # EDGE TTS via public endpoint (FREE workaround)
-        url = "https://api.streamelements.com/kappa/v2/speech"
+        # 🔥 FIX: pakai public TTS endpoint (STABLE FOR VERCEL)
+        url = "https://translate.google.com/translate_tts"
 
-        payload = {
-            "voice": VOICE,
-            "text": text
+        params = {
+            "ie": "UTF-8",
+            "q": text,
+            "tl": "id",
+            "client": "tw-ob"
         }
 
-        r = requests.get(
-            "https://text-to-speech-api.vercel.app/api/tts",
-            params={"text": text, "voice": "id-ID"},
-        )
+        headers = {
+            "User-Agent": "Mozilla/5.0"
+        }
+
+        r = requests.get(url, params=params, headers=headers)
+
+        if r.status_code != 200:
+            self.send_response(500)
+            self.end_headers()
+            self.wfile.write(b"TTS error")
+            return
 
         self.send_response(200)
         self.send_header("Content-Type", "audio/mpeg")
