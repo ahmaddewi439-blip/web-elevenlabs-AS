@@ -1,44 +1,123 @@
-import requests
-import json
-
-VOICE_ID = "21m00Tcm4TlvDq8ikWAM"
-API_KEY = "ISI_API_KEY_KAMU"
-
-def handler(request):
-    if request.method != "POST":
-        return {
-            "statusCode": 405,
-            "body": json.dumps({"error": "Method not allowed"})
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>TTS Generator</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #0f172a;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
         }
 
-    body = request.json()
-    text = body.get("text", "")
-
-    if not text:
-        return {
-            "statusCode": 400,
-            "body": json.dumps({"error": "Text kosong"})
+        .card {
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 12px;
+            width: 400px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
-    url = f"https://api.elevenlabs.io/v1/text-to-speech/{VOICE_ID}"
+        textarea {
+            width: 100%;
+            height: 120px;
+            border-radius: 8px;
+            padding: 10px;
+            border: none;
+            outline: none;
+        }
 
-    headers = {
-        "xi-api-key": API_KEY,
-        "Content-Type": "application/json",
-        "Accept": "audio/mpeg"
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 8px;
+            background: #3b82f6;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #2563eb;
+        }
+
+        audio {
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        .title {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+
+        .status {
+            text-align: center;
+            font-size: 12px;
+            color: #94a3b8;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <div class="title">🎤 TTS Generator</div>
+
+    <textarea id="text" placeholder="Tulis teks di sini..."></textarea>
+
+    <button onclick="generate()">Generate Suara</button>
+
+    <div class="status" id="status"></div>
+
+    <audio id="audio" controls></audio>
+</div>
+
+<script>
+async function generate() {
+    const text = document.getElementById("text").value;
+    const status = document.getElementById("status");
+    const audio = document.getElementById("audio");
+
+    if (!text) {
+        alert("Teks tidak boleh kosong!");
+        return;
     }
 
-    payload = {
-        "text": text,
-        "model_id": "eleven_multilingual_v2"
-    }
+    status.innerText = "Generating suara... 🔄";
 
-    r = requests.post(url, json=payload, headers=headers)
+    try {
+        const res = await fetch("/api/generate-audio", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ text })
+        });
 
-    return {
-        "statusCode": 200,
-        "headers": {
-            "Content-Type": "audio/mpeg"
-        },
-        "body": r.content
+        if (!res.ok) {
+            status.innerText = "Error ❌";
+            return;
+        }
+
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+
+        audio.src = url;
+        audio.play();
+
+        status.innerText = "Sukses ✅";
+    } catch (err) {
+        status.innerText = "Error koneksi ❌";
     }
+}
+</script>
+
+</body>
+</html>
