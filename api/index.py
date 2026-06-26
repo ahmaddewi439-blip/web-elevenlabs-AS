@@ -3,7 +3,7 @@ import requests
 
 app = Flask(__name__)
 
-VOICE_ID = "21m00Tcm4TlvDq8ikWAM"
+VOICE_ID = "1ijzBXcD3AIVH8RGMcQd"
 API_KEY = "sk_0a1305f6f3a9780dceb85f2441b0af1805b8ef00d7d5cad6"
 
 @app.route("/api/generate-audio", methods=["POST"])
