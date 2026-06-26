@@ -1,96 +1,127 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <title>TTS Generator</title>
-    <style>
-        body {
-            font-family: Arial;
-            background: #0f172a;
-            color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
+<meta charset="UTF-8">
+<title>AI Voice Generator</title>
 
-        .card {
-            background: #1e293b;
-            padding: 20px;
-            border-radius: 12px;
-            width: 400px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
+<style>
+body {
+    margin: 0;
+    font-family: Arial;
+    background: #0b1220;
+    color: white;
+    display: flex;
+    height: 100vh;
+}
 
-        textarea {
-            width: 100%;
-            height: 120px;
-            border-radius: 8px;
-            padding: 10px;
-            border: none;
-            outline: none;
-        }
+/* LEFT PANEL */
+.left {
+    width: 35%;
+    padding: 20px;
+    border-right: 1px solid #1f2a44;
+    background: #0f172a;
+}
 
-        button {
-            width: 100%;
-            padding: 12px;
-            margin-top: 10px;
-            border: none;
-            border-radius: 8px;
-            background: #3b82f6;
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-        }
+textarea {
+    width: 100%;
+    height: 140px;
+    border-radius: 10px;
+    padding: 10px;
+    border: none;
+    outline: none;
+    background: #111827;
+    color: white;
+    resize: none;
+}
 
-        button:hover {
-            background: #2563eb;
-        }
+button {
+    width: 100%;
+    padding: 12px;
+    margin-top: 10px;
+    border: none;
+    border-radius: 10px;
+    background: #3b82f6;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+}
 
-        audio {
-            width: 100%;
-            margin-top: 15px;
-        }
+button:hover {
+    background: #2563eb;
+}
 
-        .title {
-            text-align: center;
-            margin-bottom: 10px;
-            font-size: 18px;
-        }
+/* RIGHT PANEL */
+.right {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+}
 
-        .status {
-            text-align: center;
-            font-size: 12px;
-            color: #94a3b8;
-        }
-    </style>
+.card {
+    background: #111827;
+    padding: 12px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+audio {
+    width: 200px;
+}
+
+.small {
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+.title {
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+.status {
+    font-size: 12px;
+    color: #94a3b8;
+    margin-top: 5px;
+}
+</style>
+
 </head>
 <body>
 
-<div class="card">
-    <div class="title">🎤 TTS Generator</div>
+<!-- LEFT -->
+<div class="left">
+    <div class="title">🎤 AI Voice Generator</div>
 
-    <textarea id="text" placeholder="Tulis teks di sini..."></textarea>
+    <textarea id="text" placeholder="Tulis teks..."></textarea>
 
-    <button onclick="generate()">Generate Suara</button>
+    <button onclick="generate()">Generate Voice</button>
 
     <div class="status" id="status"></div>
+</div>
 
-    <audio id="audio" controls></audio>
+<!-- RIGHT -->
+<div class="right">
+    <div class="title">📜 History</div>
+    <div id="history"></div>
 </div>
 
 <script>
+
+let historyData = [];
+
 async function generate() {
     const text = document.getElementById("text").value;
     const status = document.getElementById("status");
-    const audio = document.getElementById("audio");
 
     if (!text) {
-        alert("Teks tidak boleh kosong!");
+        alert("Teks kosong!");
         return;
     }
 
-    status.innerText = "Generating suara... 🔄";
+    status.innerText = "Generating... 🔄";
 
     try {
         const res = await fetch("/api/generate-audio", {
@@ -109,14 +140,44 @@ async function generate() {
         const blob = await res.blob();
         const url = URL.createObjectURL(blob);
 
-        audio.src = url;
-        audio.play();
+        const item = {
+            text: text,
+            audio: url,
+            time: new Date().toLocaleTimeString()
+        };
 
-        status.innerText = "Sukses ✅";
+        historyData.unshift(item);
+        renderHistory();
+
+        status.innerText = "Success ✅";
     } catch (err) {
-        status.innerText = "Error koneksi ❌";
+        status.innerText = "Connection error ❌";
     }
 }
+
+function renderHistory() {
+    const container = document.getElementById("history");
+    container.innerHTML = "";
+
+    historyData.forEach((item, index) => {
+        container.innerHTML += `
+            <div class="card">
+                <div>
+                    <div>${item.text.substring(0, 40)}...</div>
+                    <div class="small">${item.time}</div>
+                </div>
+
+                <div>
+                    <audio controls src="${item.audio}"></audio>
+                    <a href="${item.audio}" download="voice_${index}.mp3">
+                        <button style="margin-top:5px; width:100%">Download</button>
+                    </a>
+                </div>
+            </div>
+        `;
+    });
+}
+
 </script>
 
 </body>
