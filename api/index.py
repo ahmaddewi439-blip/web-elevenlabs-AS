@@ -1,47 +1,51 @@
-from flask import Flask, request, jsonify, Response
-import requests
+from http.server import BaseHTTPRequestHandler
+import json
+import subprocess
+import uuid
+import os
 
-app = Flask(__name__)
+class handler(BaseHTTPRequestHandler):
 
-VOICE_ID = "1ijzBXcD3AIVH8RGMcQd"
-API_KEY = "sk_0a1305f6f3a9780dceb85f2441b0af1805b8ef00d7d5cad6"
+    def do_POST(self):
+        length = int(self.headers.get('Content-Length'))
+        body = self.rfile.read(length)
+        data = json.loads(body)
 
-@app.route("/api/generate-audio", methods=["POST"])
-def generate_audio():
-    data = request.get_json()
+        text = data.get("text", "")
 
-    if not data or "text" not in data:
-        return jsonify({"error": "Text kosong"}), 400
+        if not text:
+            self.send_response(400)
+            self.end_headers()
+            self.wfile.write(b"Text kosong")
+            return
 
-    text = data["text"]
+        filename = f"/tmp/{uuid.uuid4()}.mp3"
 
-    url = f"https://api.elevenlabs.io/v1/text-to-speech/{VOICE_ID}"
+        # Edge TTS CLI (via Python module)
+        cmd = [
+            "python",
+            "-m",
+            "edge_tts",
+            "--text",
+            text,
+            "--voice",
+            "id-ID-ArdiNeural",
+            "--write-media",
+            filename
+        ]
 
-    headers = {
-        "xi-api-key": API_KEY,
-        "Content-Type": "application/json",
-        "Accept": "audio/mpeg"
-    }
+        try:
+            subprocess.run(cmd, check=True)
 
-    payload = {
-        "text": text,
-        "model_id": "eleven_multilingual_v2",
-        "voice_settings": {
-            "stability": 0.5,
-            "similarity_boost": 0.75
-        }
-    }
+            with open(filename, "rb") as f:
+                audio = f.read()
 
-    r = requests.post(url, json=payload, headers=headers)
+            self.send_response(200)
+            self.send_header("Content-Type", "audio/mpeg")
+            self.end_headers()
+            self.wfile.write(audio)
 
-    if r.status_code != 200:
-        return jsonify({
-            "error": "ElevenLabs error",
-            "detail": r.text
-        }), 500
-
-    return Response(r.content, mimetype="audio/mpeg")
-
-
-# 🔥 INI YANG WAJIB UNTUK VERCEL
-app = app
+        except Exception as e:
+            self.send_response(500)
+            self.end_headers()
+            self.wfile.write(str(e).encode())
