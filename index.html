@@ -5,29 +5,44 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Web TTS Ahmad</title>
     <style>
-        body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; }
-        textarea { width: 100%; height: 100px; margin-bottom: 15px; padding: 10px; font-size: 15px; }
-        select { width: 100%; margin-bottom: 15px; padding: 10px; font-size: 16px; cursor: pointer; }
-        button { padding: 12px 20px; background-color: #007bff; color: white; border: none; cursor: pointer; font-size: 16px; width: 100%; font-weight: bold; }
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; background-color: #f4f7f6; }
+        .container { background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #333; }
+        label { font-weight: bold; margin-top: 10px; display: block; color: #555; }
+        textarea { width: 100%; height: 100px; margin-top: 5px; margin-bottom: 15px; padding: 10px; font-size: 15px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        select { width: 100%; margin-top: 5px; margin-bottom: 15px; padding: 10px; font-size: 15px; cursor: pointer; border: 1px solid #ccc; border-radius: 5px; }
+        button { padding: 12px 20px; background-color: #007bff; color: white; border: none; cursor: pointer; font-size: 16px; width: 100%; font-weight: bold; border-radius: 5px; margin-top: 10px; }
         button:hover { background-color: #0056b3; }
-        audio { width: 100%; margin-top: 20px; }
+        audio { width: 100%; margin-top: 20px; outline: none; }
     </style>
 </head>
 <body>
 
-    <h2>Ubah Teks Menjadi Suara (ElevenLabs)</h2>
-    
-    <textarea id="textInput" placeholder="Ketik sesuatu di sini (contoh: Tas lucu tapi fungsional? Cek keranjang kuning sekarang!)"></textarea>
-    
-    <select id="voiceSelect">
-        <option value="21m00Tcm4TlvDq8ikWAM">Rachel (Wanita - Natural & Lembut)</option>
-        <option value="pNInz6obpgDQGcFmaJcg">Adam (Pria - Berat & Tegas)</option>
-        <option value="EXAVITQu4vr4xnSDxMaL">Bella (Wanita - Santai & Ekspresif)</option>
-    </select>
+    <div class="container">
+        <h2>Voice Generator AI</h2>
+        
+        <label for="langSelect">Pilih Bahasa:</label>
+        <select id="langSelect">
+            <option value="id">Indonesia (Otomatis)</option>
+            <option value="en">Inggris (English)</option>
+            <option value="jv">Jawa (Javanese)</option>
+        </select>
 
-    <button onclick="generateSpeech()" id="btnGenerate">Generate Suara</button>
-    
-    <div id="audioContainer"></div>
+        <label for="voiceSelect">Pilih Karakter Suara:</label>
+        <select id="voiceSelect">
+            <option value="21m00Tcm4TlvDq8ikWAM">Rachel (Wanita - Natural & Ramah)</option>
+            <option value="29vD33N1CtxCmqQRPOHJ">Drew (Pria - Berita & Dokumenter)</option>
+            <option value="2EiwWnXFnvU5JabPnv8n">Clyde (Pria - Berat & Sinematik)</option>
+            <option value="5Q0t7uMcjvnagumLfvZi">Paul (Pria - Santai & Nge-Vlog)</option>
+        </select>
+
+        <label for="textInput">Masukkan Teks:</label>
+        <textarea id="textInput" placeholder="Ketik kalimat Anda di sini..."></textarea>
+        
+        <button onclick="generateSpeech()" id="btnGenerate">Generate Suara Manusia</button>
+        
+        <div id="audioContainer"></div>
+    </div>
 
     <script>
         async function generateSpeech() {
@@ -40,13 +55,13 @@
 
             btn.innerText = "Memproses Suara (Mohon Tunggu)...";
             btn.disabled = true;
+            container.innerHTML = ""; // Bersihkan audio sebelumnya
 
             try {
                 // Memanggil backend Python di Vercel
                 const response = await fetch('/api/index.py', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    // Mengirim Teks DAN ID Suara sekaligus
                     body: JSON.stringify({ text: text, voice_id: selectedVoice })
                 });
 
@@ -56,13 +71,13 @@
                     container.innerHTML = `<audio controls src="${audioUrl}" autoplay></audio>`;
                 } else {
                     const errorText = await response.text();
-                    alert("Gagal menghasilkan suara: " + errorText);
+                    alert("Gagal dari ElevenLabs: \n" + errorText);
                 }
             } catch (error) {
-                alert("Terjadi kesalahan jaringan atau server.");
+                alert("Terjadi kesalahan jaringan.");
             }
 
-            btn.innerText = "Generate Suara";
+            btn.innerText = "Generate Suara Manusia";
             btn.disabled = false;
         }
     </script>
