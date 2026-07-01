@@ -2,11 +2,8 @@ from http.server import BaseHTTPRequestHandler
 import json
 import requests
 
-# 1. MASUKKAN API KEY ELEVENLABS ANDA DI DALAM TANDA KUTIP DI BAWAH INI
+# 1. API KEY ELEVENLABS ANDA
 ELEVENLABS_API_KEY = "1d77699397af97ef254cdec00614f02d4ccc9afe002ad1fc5edd709188a02b79"
-
-# 2. VOICE ID (Ini adalah ID untuk suara "Rachel", suara wanita natural)
-VOICE_ID = "21m00Tcm4TlvDq8ikWAM"
 
 class handler(BaseHTTPRequestHandler):
 
@@ -23,7 +20,14 @@ class handler(BaseHTTPRequestHandler):
         body = self.rfile.read(length)
         data = json.loads(body)
 
+        # ----------------------------------------------------
+        # PERBAIKAN: Penangkap data HARUS ada di dalam blok ini
         text = data.get("text", "")
+        
+        # Menangkap voice_id dari dropdown web. 
+        # Jika gagal, otomatis pakai suara Rachel.
+        voice_id = data.get("voice_id", "21m00Tcm4TlvDq8ikWAM")
+        # ----------------------------------------------------
 
         if not text:
             self.send_response(400)
@@ -31,8 +35,8 @@ class handler(BaseHTTPRequestHandler):
             self.wfile.write(b"Text kosong")
             return
 
-        # 🔥 MENGGUNAKAN API ELEVENLABS
-        url = f"https://api.elevenlabs.io/v1/text-to-speech/{VOICE_ID}"
+        # URL sekarang otomatis berubah sesuai ID yang dipilih di web
+        url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
 
         # Headers khusus untuk ElevenLabs
         headers = {
@@ -44,10 +48,10 @@ class handler(BaseHTTPRequestHandler):
         # Pengaturan suara agar mirip manusia asli
         payload = {
             "text": text,
-            "model_id": "eleven_multilingual_v2", # Model ini sangat bagus untuk bahasa Indonesia
+            "model_id": "eleven_multilingual_v2", # Model bahasa Indonesia
             "voice_settings": {
-                "stability": 0.5,        # 0.5 membuat intonasi lebih dinamis dan tidak kaku
-                "similarity_boost": 0.75 # Menjaga kejelasan artikulasi
+                "stability": 0.5,        # Intonasi dinamis dan tidak kaku
+                "similarity_boost": 0.75 # Menjaga kejelasan
             }
         }
 
