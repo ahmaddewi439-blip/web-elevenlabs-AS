@@ -4,7 +4,7 @@ import requests
 import os
 
 # MASUKKAN TOKEN HUGGING FACE ANDA DI BAWAH INI (Yang berawalan hf_...)
-HF_TOKEN = "MASUKKAN_TOKEN_HF_ANDA_DISINI"
+HF_TOKEN = "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"
 
 # File suara Anda sudah terdeteksi di folder
 FILE_SUARA = "lv_0_20260707092058.mp3"
