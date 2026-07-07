@@ -3,81 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web TTS Ahmad</title>
+    <title>Web TTS Kloning Suara</title>
     <style>
-        body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; background-color: #f4f7f6; }
-        .container { background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        h2 { text-align: center; color: #333; }
-        label { font-weight: bold; margin-top: 10px; display: block; color: #555; }
-        textarea { width: 100%; height: 100px; margin-top: 5px; margin-bottom: 15px; padding: 10px; font-size: 15px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
-        select { width: 100%; margin-top: 5px; margin-bottom: 15px; padding: 10px; font-size: 15px; cursor: pointer; border: 1px solid #ccc; border-radius: 5px; }
-        button { padding: 12px 20px; background-color: #007bff; color: white; border: none; cursor: pointer; font-size: 16px; width: 100%; font-weight: bold; border-radius: 5px; margin-top: 10px; }
-        button:hover { background-color: #0056b3; }
-        audio { width: 100%; margin-top: 20px; outline: none; }
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 50px auto; padding: 20px; background-color: #f8f9fa; }
+        .container { background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #2c3e50; margin-bottom: 20px; }
+        label { font-weight: bold; margin-top: 15px; display: block; color: #34495e; }
+        textarea { width: 100%; height: 120px; margin-top: 8px; margin-bottom: 20px; padding: 12px; font-size: 15px; border: 1px solid #ced4da; border-radius: 6px; box-sizing: border-box; resize: vertical; }
+        select { width: 100%; margin-top: 8px; margin-bottom: 20px; padding: 12px; font-size: 15px; cursor: pointer; border: 1px solid #ced4da; border-radius: 6px; background-color: #fff; }
+        button { padding: 14px 20px; background-color: #27ae60; color: white; border: none; cursor: pointer; font-size: 16px; width: 100%; font-weight: bold; border-radius: 6px; transition: background-color 0.3s; }
+        button:hover { background-color: #219653; }
+        button:disabled { background-color: #95a5a6; cursor: not-allowed; }
+        audio { width: 100%; margin-top: 25px; outline: none; display: none; }
     </style>
 </head>
 <body>
 
     <div class="container">
-        <h2>Voice Generator AI</h2>
+        <h2>Studio Suara AI</h2>
         
-        <label for="langSelect">Pilih Bahasa:</label>
-        <select id="langSelect">
-            <option value="id">Indonesia (Otomatis)</option>
-            <option value="en">Inggris (English)</option>
-            <option value="jv">Jawa (Javanese)</option>
-        </select>
-
         <label for="voiceSelect">Pilih Karakter Suara:</label>
         <select id="voiceSelect">
-            <option value="21m00Tcm4TlvDq8ikWAM">Rachel (Wanita - Natural & Ramah)</option>
-            <option value="29vD33N1CtxCmqQRPOHJ">Drew (Pria - Berita & Dokumenter)</option>
-            <option value="2EiwWnXFnvU5JabPnv8n">Clyde (Pria - Berat & Sinematik)</option>
-            <option value="5Q0t7uMcjvnagumLfvZi">Paul (Pria - Santai & Nge-Vlog)</option>
+            <!-- Kita siapkan satu tempat khusus untuk suara Anda nantinya -->
+            <option value="suara_pribadi">Suara Saya Sendiri (Ahmad)</option>
         </select>
 
-        <label for="textInput">Masukkan Teks:</label>
-        <textarea id="textInput" placeholder="Ketik kalimat Anda di sini..."></textarea>
+        <label for="textInput">Masukkan Teks Naskah:</label>
+        <textarea id="textInput" placeholder="Ketik teks yang ingin diubah menjadi suara di sini..."></textarea>
         
-        <button onclick="generateSpeech()" id="btnGenerate">Generate Suara Manusia</button>
+        <button onclick="generateSpeech()" id="btnGenerate">Ubah ke Suara Manusia</button>
         
-        <div id="audioContainer"></div>
+        <!-- Wadah pemutar audio disembunyikan sampai suaranya jadi -->
+        <audio id="audioPlayer" controls></audio>
     </div>
 
     <script>
         async function generateSpeech() {
             const text = document.getElementById('textInput').value;
-            const selectedVoice = document.getElementById('voiceSelect').value;
             const btn = document.getElementById('btnGenerate');
-            const container = document.getElementById('audioContainer');
+            const audioPlayer = document.getElementById('audioPlayer');
             
-            if (!text) return alert("Silakan ketik teks terlebih dahulu!");
+            if (!text.trim()) {
+                return alert("Teks tidak boleh kosong. Silakan ketik sesuatu!");
+            }
 
-            btn.innerText = "Memproses Suara (Mohon Tunggu)...";
+            // Ubah tampilan tombol saat memproses
+            btn.innerText = "Sedang Memproses AI (Mohon Tunggu)...";
             btn.disabled = true;
-            container.innerHTML = ""; // Bersihkan audio sebelumnya
+            audioPlayer.style.display = "none";
+            audioPlayer.src = "";
 
             try {
-                // Memanggil backend Python di Vercel
+                // Nantinya ini akan menembak ke Python server gratisan kita
                 const response = await fetch('/api/index.py', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text: text, voice_id: selectedVoice })
+                    body: JSON.stringify({ text: text })
                 });
 
                 if (response.ok) {
                     const audioBlob = await response.blob();
-                    const audioUrl = URL.createObjectURL(audioBlob);
-                    container.innerHTML = `<audio controls src="${audioUrl}" autoplay></audio>`;
+                    audioPlayer.src = URL.createObjectURL(audioBlob);
+                    audioPlayer.style.display = "block";
+                    audioPlayer.play();
                 } else {
                     const errorText = await response.text();
-                    alert("Gagal dari ElevenLabs: \n" + errorText);
+                    alert("Sistem belum terhubung penuh: \n" + errorText);
                 }
             } catch (error) {
                 alert("Terjadi kesalahan jaringan.");
             }
 
-            btn.innerText = "Generate Suara Manusia";
+            // Kembalikan tampilan tombol
+            btn.innerText = "Ubah ke Suara Manusia";
             btn.disabled = false;
         }
     </script>
